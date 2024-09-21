@@ -6,6 +6,7 @@ import {
   generateAESKeyIV,
   getRSAKey,
 } from "../utils";
+import { API_ENDPOINT } from "../constatnts";
 
 interface AuthContextType {
   encryptAndSendData: (message: string) => Promise<void>;
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const encryptedAESKey = await encryptAESKeyWithRSA(aesKey, publicRSAKey);
 
     // Send encrypted AES key, IV, and encrypted message to server
-    const res = await fetch("http://localhost:8085/api/decrypt", {
+    const res = await fetch(`${API_ENDPOINT}/decrypt`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

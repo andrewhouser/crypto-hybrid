@@ -2,17 +2,19 @@ import cors from "cors";
 import express from "express";
 import nocache from "nocache";
 import fs from "fs";
-
 import { privateDecrypt, createDecipheriv } from "crypto";
 
+// Initialize Express app and set port
 const app = express();
 const port = 8085;
 
+// CORS options
 const corsOptions = {
   origin: "http://localhost:5173",
   optionsSuccessStatus: 200, // Some legacy browsers choke on status 204, so use 200
 };
 
+// Middleware
 app.use(cors());
 app.use(nocache());
 app.use(express.json());
@@ -23,16 +25,20 @@ app.use(
 );
 app.set("etag", false);
 
+// Define paths for RSA key files
 const PRIVATE_KEY = "keys/private.pem";
 const PUBLIC_KEY = "keys/public.pem";
 
 /// BEGIN API ENDPOINTS
+
+// Decryption endpoint
 app.post("/api/decrypt", async (req, res) => {
+  // Extract encrypted data from request body
   const { encryptedAESKey, iv, encryptedMessage } = req.body;
   const privateKey = fs.readFileSync(PRIVATE_KEY, "utf8");
 
   try {
-    // Decrypt the AES key with the server's private RSA key
+    // Step 1: Decrypt the AES key using RSA private key
     const aesKeyBuffer = privateDecrypt(
       {
         key: privateKey,
@@ -45,7 +51,7 @@ app.post("/api/decrypt", async (req, res) => {
 
     const aesKey = aesKeyBuffer.toString(); // Get AES key as a string
 
-    // Decrypt the message using AES (as in your previous code)
+    // Step 2: Decrypt the message using AES
     const decipher = createDecipheriv(
       "aes-256-cbc",
       Buffer.from(aesKey, "base64"), // Make sure the AES key is correctly formatted
@@ -55,6 +61,7 @@ app.post("/api/decrypt", async (req, res) => {
     let decrypted = decipher.update(encryptedMessage, "base64", "utf8");
     decrypted += decipher.final("utf8");
 
+    // Send decrypted message back to client
     res.json({ decryptedMessage: decrypted });
   } catch (err) {
     console.error("Decryption error:", err);
@@ -62,7 +69,9 @@ app.post("/api/decrypt", async (req, res) => {
   }
 });
 
+// Public key retrieval endpoint
 app.get("/api/public_key", cors(corsOptions), (req, res) => {
+  // Read and format public key
   let publicKey = fs.readFileSync(PUBLIC_KEY, "utf8");
   publicKey = publicKey.replace(/-----.*-----/g, "").replace(/\s+/g, "");
   res.json({ publicKey });

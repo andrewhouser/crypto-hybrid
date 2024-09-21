@@ -1,39 +1,64 @@
-import { useRef } from "react";
+import { ChangeEvent, useState } from "react";
 import "./App.css";
 import { useAuthContext } from "./hooks/useAuthContext";
 
+const initialFormData: Record<string, string> = {
+  name: "",
+  email: "",
+};
+
 function App() {
-  const emailRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState(initialFormData);
 
   const { publicRSAKey, encryptAndSendData } = useAuthContext();
 
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!inputRef.current || !emailRef.current || !publicRSAKey) return;
 
-    const { value: name } = inputRef.current;
-    const { value: email } = emailRef.current;
+    const { name, email } = formData;
+
+    if ((!name && !email) || !publicRSAKey) return;
 
     encryptAndSendData(JSON.stringify({ name, email }));
 
-    inputRef.current!.value = "";
-    emailRef.current!.value = "";
+    setFormData(initialFormData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <p>
         <label htmlFor="name">
-          Name: <input id="name" name="name" ref={inputRef} type="text" />
+          <span>Name:</span>
+          <input
+            autoComplete="off"
+            id="name"
+            name="name"
+            onChange={handleChange}
+            type="text"
+            value={formData.name}
+          />
         </label>
       </p>
       <p>
         <label htmlFor="email">
-          Email: <input id="email" name="email" ref={emailRef} type="email" />
+          <span>Email:</span>
+          <input
+            autoComplete="off"
+            id="email"
+            name="email"
+            onChange={handleChange}
+            type="email"
+            value={formData.email}
+          />
         </label>
       </p>
-      <button type="submit">Submit</button>
+      <button type="submit" disabled={!formData.email && !formData.name}>
+        Submit
+      </button>
     </form>
   );
 }

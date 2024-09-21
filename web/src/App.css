@@ -4,3 +4,21 @@
   padding: 2rem;
   text-align: center;
 }
+
+form {
+  font-size: 1.5rem;
+}
+
+label {
+  display: flex;
+  gap: 16px;
+
+  & span {
+    text-align: right;
+    width: 100px;
+  }
+}
+
+input {
+  font-size: 1.5rem;
+}
